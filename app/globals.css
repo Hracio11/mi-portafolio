@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colores de tu paleta editorial */
+  --color-portfolio-green: #2D3E33;
+  --color-portfolio-yellow: #E9A228;
+  --color-portfolio-cream: #F1E8D9;
+  --color-portfolio-orange: #F16335;
+
+  /* Fuentes */
+  --font-serif: var(--font-serif), serif;
+  --font-sans: var(--font-sans), sans-serif;
+}
+
+:root {
+  --background: var(--color-portfolio-cream);
+  --foreground: var(--color-portfolio-green);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+html {
+  scroll-behavior: smooth;
+}
