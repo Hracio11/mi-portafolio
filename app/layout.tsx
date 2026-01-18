@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 const serif = Playfair_Display({ 
   subsets: ["latin"], 
@@ -25,8 +26,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={`${serif.variable} ${sans.variable} font-sans bg-portfolio-cream text-portfolio-green`}>
+      <body className={`${serif.variable} ${sans.variable} font-sans bg-portfolio-cream text-portfolio-green transition-colors duration-200`}>
         {children}
+        <WhatsAppButton />
       </body>
     </html>
   );
