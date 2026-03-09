@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 export interface Project {
   id: string;
   title: string;
@@ -11,6 +13,15 @@ export interface Project {
   image_url?: string;
   visible: boolean;
   order: number;
+}
+
+export interface BlogPhoto {
+  id: string;
+  image_url: string;
+  caption?: string;
+  order: number;
+  visible: boolean;
+  created_at?: string;
 }
 
 export interface SiteConfig {
@@ -25,17 +36,22 @@ export interface SiteConfig {
   logo_text: string;
   logo_image_url?: string;
   cv_url: string;
+  profile_image_url?: string;
   skills_tech: string[];
   skills_soft: string[];
   experience: { role: string; company: string; period: string; bullets: string[] }[];
   education: { degree: string; school: string; period: string; detail: string }[];
   stats: { label: string; value: string }[];
+  hobbies: { icon: string; label: string }[];
+  music: { title: string; artist: string; genre: string }[];
+  movies: { title: string; year: string; genre: string }[];
+  personal_quote: string;
+  personal_quote_author: string;
 }
 
-// ── Projects ──────────────────────────────────────────────────────────────────
+// ─── Projects ─────────────────────────────────────────────────────────────────
 export async function fetchProjects(): Promise<Project[]> {
-  const { data, error } = await supabase
-    .from("projects").select("*").order("order", { ascending: true });
+  const { data, error } = await supabase.from("projects").select("*").order("order", { ascending: true });
   if (error) throw error;
   return data as Project[];
 }
@@ -58,7 +74,28 @@ export async function toggleProjectVisibility(id: string, visible: boolean): Pro
   if (error) throw error;
 }
 
-// ── Site Config ───────────────────────────────────────────────────────────────
+// ─── Blog Photos ──────────────────────────────────────────────────────────────
+export async function fetchBlogPhotos(): Promise<BlogPhoto[]> {
+  const { data, error } = await supabase.from("blog_photos").select("*").order("order", { ascending: true });
+  if (error) throw error;
+  return data as BlogPhoto[];
+}
+export async function createBlogPhoto(p: Omit<BlogPhoto, "id" | "created_at">): Promise<BlogPhoto> {
+  const { data, error } = await supabase.from("blog_photos").insert(p).select().single();
+  if (error) throw error;
+  return data as BlogPhoto;
+}
+export async function updateBlogPhoto(id: string, updates: Partial<BlogPhoto>): Promise<BlogPhoto> {
+  const { data, error } = await supabase.from("blog_photos").update(updates).eq("id", id).select().single();
+  if (error) throw error;
+  return data as BlogPhoto;
+}
+export async function deleteBlogPhoto(id: string): Promise<void> {
+  const { error } = await supabase.from("blog_photos").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ─── Site Config ──────────────────────────────────────────────────────────────
 export async function fetchSiteConfig(): Promise<SiteConfig> {
   const { data, error } = await supabase.from("site_config").select("*").eq("id", 1).single();
   if (error) throw error;
@@ -70,16 +107,25 @@ export async function updateSiteConfig(updates: Partial<SiteConfig>): Promise<Si
   return data as SiteConfig;
 }
 
-// ── Logo upload ───────────────────────────────────────────────────────────────
-export async function uploadLogo(file: File): Promise<string> {
-  const ext = file.name.split(".").pop();
-  const { error } = await supabase.storage.from("assets").upload(`logo/logo.${ext}`, file, { upsert: true });
+// ─── File uploads ─────────────────────────────────────────────────────────────
+export async function uploadFile(file: File, path: string): Promise<string> {
+  const { error } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
   if (error) throw error;
-  const { data } = supabase.storage.from("assets").getPublicUrl(`logo/logo.${ext}`);
+  const { data } = supabase.storage.from("assets").getPublicUrl(path);
   return data.publicUrl;
 }
+export async function uploadLogo(file: File): Promise<string> {
+  return uploadFile(file, `logo/logo.${file.name.split(".").pop()}`);
+}
+export async function uploadProfileImage(file: File): Promise<string> {
+  return uploadFile(file, `profile/profile.${file.name.split(".").pop()}`);
+}
+export async function uploadBlogPhoto(file: File): Promise<string> {
+  const ts = Date.now();
+  return uploadFile(file, `blog/${ts}-${file.name}`);
+}
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// ─── Auth ──────────────────────────────────────────────────────────────────────
 export async function login(email: string, password: string): Promise<boolean> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   return !error;
